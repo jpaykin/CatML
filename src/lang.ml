@@ -12,8 +12,12 @@ type expr =
      | If of expr * expr * expr
      (* Variables and let expressions *)
      | Var of var | Let of var * expr * expr
+     (* pairs; functions; and recursive functions *)
+     | Pair of expr * expr
+     | Fun of var * expr
+     | Fix of var * var * expr
+     | App of expr * expr
 
-     (* TODO: Add pairs; functions; and recursive functions *)
 
 
 (*
@@ -21,9 +25,11 @@ type expr =
   in : AST [[e]]
   out : true iff e is a value
 *)
-let is_val e = match e with 
+let rec is_val e = match e with 
      Int _ -> true
    | Bool _ -> true
+   | Pair (e1, e2) -> (is_val e1) && (is_val e2)
+   | Fun _ -> true 
    | _ -> false
 
 (*************************)
@@ -43,6 +49,14 @@ let rec subst (x, v, e) : expr =
   | Mult(e1,e2) -> Mult(subst(x,v,e1), subst(x,v,e2))
   | Equal(e1,e2) -> Equal(subst(x,v,e1), subst(x,v,e2))
   | If(e0,e1,e2) -> If(subst(x,v,e0), subst(x,v,e1), subst(x,v,e2))
+  (* subst in Pair *)
+  | Pair(e1, e2) -> failwith "Pair not yet implemented"
+  (* subst in Fun *)
+  | Fun(x, e1) -> failwith "Fun not yet implemented"
+  (* subst in App *)
+  | App(e1, e2) -> failwith "App not yet implemented"
+  (* subst in Fix *)
+  | Fix(f, x, e1) -> failwith "Fix not yet implemented"
 
 type step_result = Step of expr | NotReducible
 (* 
@@ -123,6 +137,14 @@ let rec step (e : expr) : step_result =
       | Step e1' -> Step (Let(x,e1',e2))
       | NotReducible -> if is_val e1 then Step(subst(x,e1,e2)) else NotReducible
       end
+  (* Step for Pair *)
+  | Pair(e1, e2) -> failwith "Pair not yet implemented"
+  (* Step for Fun *)
+  | Fun(x, e1) -> failwith "Fun not yet implemented"
+  (* Step for App *)
+  | App(e1, e2) -> failwith "App not yet implemented"
+  (* Step for Fix *)
+  | Fix(f, x, e1) -> failwith "Fix not yet implemented"
 
 
 (*
@@ -142,8 +164,10 @@ let rec multistep e = match step e with
 (* Type checking *)
 (*****************)
 
-type arith_type = INT | BOOL
-(* TODO: add pairs and function types *)
+type arith_type =
+  | INT | BOOL
+  | PAIR of arith_type * arith_type
+  | FUN of arith_type * arith_type
 
 (* Define a type to represent finite maps/typing contexts *)
 type context = (var * arith_type) list
@@ -211,6 +235,14 @@ let rec type_of_expr (g, e) : arith_type option =
       else None
     | _, _, _ -> None
     end
+  (* Type of Pair *)
+  | Pair(e1, e2) -> failwith "Pair not yet implemented"
+  (* Type of Fun *)
+  | Fun(x, e1) -> failwith "Fun not yet implemented"
+  (* Type of App *)
+  | App(e1, e2) -> failwith "App not yet implemented"
+  (* Type of Fix *)
+  | Fix(f, x, e1) -> failwith "Fix not yet implemented"
 
 
 
@@ -226,7 +258,6 @@ let rec type_of_expr (g, e) : arith_type option =
   out : The concrete expression e in string format.
 *)
 let rec string_of_expr e = match e with
-  (* TODO: extend string_of_expr *)
    | Var x -> x
    | Let(x,e1,e2) -> "Let " ^ x ^ " = " ^ string_of_expr e1 ^ " In " ^ string_of_expr e2
    | Bool true -> "True"
@@ -241,6 +272,14 @@ let rec string_of_expr e = match e with
    | If(e1, e2, e3) -> "If " ^ (string_of_expr e1) ^ 
                        " Then " ^ (string_of_expr e2) ^
                        " Else " ^ (string_of_expr e3)
+  (* String of Pair *)
+  | Pair(e1, e2) -> failwith "Pair not yet implemented"
+  (* String of Fun *)
+  | Fun(x, e1) -> failwith "Fun not yet implemented"
+  (* String of App *)
+  | App(e1, e2) -> failwith "App not yet implemented"
+  (* String of Fix *)
+  | Fix(f, x, e1) -> failwith "Fix not yet implemented"
 
 
 (*
